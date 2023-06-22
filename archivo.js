@@ -1,7 +1,7 @@
 //Primero definí las variables de mi carrito 
 const listaCarrito = document.getElementById('lista-carrito');
 const totalCarrito = document.getElementById('total-carrito');
-const carrito = [];
+let carrito = [];
 //incluyo el evento "click"
 document.querySelectorAll('.agregar-carrito').forEach((boton) => {
   boton.addEventListener('click', agregarAlCarrito); 
@@ -21,23 +21,65 @@ function agregarAlCarrito(event) {
              actualizarCarrito();
     }
   }
-  
+
 // Función para actualizar el carrito y mostrar los artículos acumulados
 function actualizarCarrito() {
-  // Se limpia la lista del carrito antes de mostrar los artículos
+
   listaCarrito.innerHTML = '';
 
-  // Función para recorrer los artículos en el carrito y mostrarlos en la lista
+
   carrito.forEach((articulo) => {
     const nuevoItemCarrito = document.createElement('li');
     nuevoItemCarrito.innerHTML = `${articulo.titulo} - Precio: $${articulo.precio}`;
     listaCarrito.appendChild(nuevoItemCarrito);
   });
 
+   // Eliminar los eventos "click" existentes de los botones "Eliminar"
+   document.querySelectorAll('.eliminar-item').forEach((boton) => {
+    boton.removeEventListener('click', eliminarDelCarrito);
+  });
+
+  // Agregar el evento "click" a los botones "Eliminar"
+  document.querySelectorAll('.eliminar-item').forEach((boton) => {
+    boton.addEventListener('click', eliminarDelCarrito);
+    console.log('Evento de clic agregado al botón "Eliminar"')
+  });
+
+ // Agregar el evento "click" al contenedor del carrito para eliminar los artículos
+ document.getElementById('lista-carrito').addEventListener('click', eliminarDelCarrito);
+
+
   // Función para calcular y mostrar el total del carrito
+  function obtenerIndiceArticulo(articulo) {
+    const listaArticulos = document.querySelectorAll('.articulo');
+    for (let i = 0; i < listaArticulos.length; i++) {
+      if (listaArticulos[i] === articulo) {
+        return i;
+      }
+    }
+    return -1; // Devolver -1 si no se encuentra el índice del artículo
+  }
+
   const total = carrito.reduce((acumulador, articulo) => acumulador + articulo.precio, 0);
   totalCarrito.textContent = `Total: $${total}`;
-}
+} 
+  // Función para eliminar un artículo del carrito
+  function eliminarDelCarrito(event) {
+    if (event.target.classList.contains('eliminar-item')) {
+      // Obtener el botón "Eliminar" específico al que se le dio clic
+      const botonEliminar = event.target;
+      // Obtener el div padre del botón "Eliminar" que contiene el artículo
+      const articulo = botonEliminar.parentNode;
+      // Obtener el índice del artículo a eliminar
+      const indice = obtenerIndiceArticulo(articulo);
+  
+      // Eliminar el artículo del arreglo carrito
+      carrito.splice(indice, 1);
+  
+      // Actualizar el carrito
+      actualizarCarrito();
+    }
+  }
 
 // Función para guardar el carrito en el localStorage
 function guardarCarrito() {
