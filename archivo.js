@@ -98,8 +98,6 @@ function cargarCarrito() {
   if (!!carritoJSON) {
     carrito = JSON.parse(carritoJSON);
   }
-
-  // Función para actualizar el carrito
   actualizarCarrito();
 }
 
