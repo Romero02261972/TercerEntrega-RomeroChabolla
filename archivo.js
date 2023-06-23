@@ -1,106 +1,112 @@
-//Primero definí las variables de mi carrito 
-const listaCarrito = document.getElementById('lista-carrito');
-const totalCarrito = document.getElementById('total-carrito');
+//Primero definí las variables de mi carrito
+let products = [];
+const listaCarrito = document.getElementById("lista-carrito");
+const totalCarrito = document.getElementById("total-carrito");
 let carrito = [];
-//incluyo el evento "click"
-document.querySelectorAll('.agregar-carrito').forEach((boton) => {
-  boton.addEventListener('click', agregarAlCarrito); 
-});
-function agregarAlCarrito(event) {
-    const articulo = event.target.parentNode;
-    const titulo = articulo.querySelector('h3').textContent;
-    const precioTexto = articulo.querySelector('p').textContent.replace('Precio: $', '');
-    const precio = parseFloat(precioTexto);
-  
-    if (!isNaN(precio)) /* Esto lo incluí porque al darme el total del precio me aparecia NaN */ {
-      // Variable para crear artículos
-      const nuevoArticulo = { titulo, precio };
-  
-      // Función para agrega artículos al arreglo carrito
-      carrito.push(nuevoArticulo);
-             actualizarCarrito();
-    }
+cargarProductos();
+function cargarProductos() {
+  const productsJSON = localStorage.getItem("BMS__products__BMS");
+  if (!!productsJSON) {
+    products = JSON.parse(productsJSON);
+  } else {
+    products = [
+      {
+        _id: getRandomString(8),
+        name: "Vestido Rojo",
+        price: 1500,
+      },
+      {
+        _id: getRandomString(8),
+        name: "Sueter blanco",
+        price: 1500,
+      },
+      {
+        _id: getRandomString(8),
+        name: "Blusa de colores",
+        price: 1600,
+      },
+      {
+        _id: getRandomString(8),
+        name: "Falda negra",
+        price: 1800,
+      },
+    ];
+    localStorage.setItem("BMS__products__BMS", JSON.stringify(products));
   }
+  const articulosDiv = document.getElementById(`articulos`);
+  articulosDiv.innerHTML = "";
+  products.forEach((product) => {
+    articulosDiv.innerHTML += `<div class="articulo">
+       <h3>${product.name}</h3>
+       <p>Precio: $${product.price}</p>
+       <button class="agregar-carrito" onclick="addArticle('${product._id}')">Agregar al carrito</button>
+       <button class="eliminar-item" onclick="deleteArticle('${product._id}')">Eliminar</button>
+     </div>
+   `;
+  });
+
+  cargarCarrito();
+}
+
+function getRandomString(length) {
+  let options =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let newString = "";
+  for (let i = 0; i <= length; i++) {
+    newString += options.charAt(Math.floor(Math.random() * options.length + 1));
+  }
+  return newString;
+}
+
+function addArticle(id) {
+  let product = products.find((p) => p._id === id);
+  if (!!product) {
+    carrito.push(product);
+    actualizarCarrito();
+  }
+}
+
+function deleteArticle(id) {
+  carrito = carrito.filter((c) => c._id !== id);
+  actualizarCarrito();
+}
 
 // Función para actualizar el carrito y mostrar los artículos acumulados
 function actualizarCarrito() {
-
-  listaCarrito.innerHTML = '';
-
+  listaCarrito.innerHTML = "";
 
   carrito.forEach((articulo) => {
-    const nuevoItemCarrito = document.createElement('li');
-    nuevoItemCarrito.innerHTML = `${articulo.titulo} - Precio: $${articulo.precio}`;
+    const nuevoItemCarrito = document.createElement("li");
+    nuevoItemCarrito.innerHTML = `${articulo.name} - Precio: $${articulo.price}`;
     listaCarrito.appendChild(nuevoItemCarrito);
   });
 
-   // Eliminar los eventos "click" existentes de los botones "Eliminar"
-   document.querySelectorAll('.eliminar-item').forEach((boton) => {
-    boton.removeEventListener('click', eliminarDelCarrito);
-  });
-
-  // Agregar el evento "click" a los botones "Eliminar"
-  document.querySelectorAll('.eliminar-item').forEach((boton) => {
-    boton.addEventListener('click', eliminarDelCarrito);
-    console.log('Evento de clic agregado al botón "Eliminar"')
-  });
-
- // Agregar el evento "click" al contenedor del carrito para eliminar los artículos
- document.getElementById('lista-carrito').addEventListener('click', eliminarDelCarrito);
-
-
-  // Función para calcular y mostrar el total del carrito
-  function obtenerIndiceArticulo(articulo) {
-    const listaArticulos = document.querySelectorAll('.articulo');
-    for (let i = 0; i < listaArticulos.length; i++) {
-      if (listaArticulos[i] === articulo) {
-        return i;
-      }
-    }
-    return -1; // Devolver -1 si no se encuentra el índice del artículo
-  }
-
-  const total = carrito.reduce((acumulador, articulo) => acumulador + articulo.precio, 0);
+  const total = carrito.reduce(
+    (acumulador, articulo) => acumulador + articulo.price,
+    0
+  );
   totalCarrito.textContent = `Total: $${total}`;
-} 
-  // Función para eliminar un artículo del carrito
-  function eliminarDelCarrito(event) {
-    if (event.target.classList.contains('eliminar-item')) {
-      // Obtener el botón "Eliminar" específico al que se le dio clic
-      const botonEliminar = event.target;
-      // Obtener el div padre del botón "Eliminar" que contiene el artículo
-      const articulo = botonEliminar.parentNode;
-      // Obtener el índice del artículo a eliminar
-      const indice = obtenerIndiceArticulo(articulo);
-  
-      // Eliminar el artículo del arreglo carrito
-      carrito.splice(indice, 1);
-  
-      // Actualizar el carrito
-      actualizarCarrito();
-    }
+  localStorage.setItem("BMS__carrito__BMS", JSON.stringify(carrito));
+}
+
+// Función para cargar el carrito desde el localStorage
+function cargarCarrito() {
+  // Se obtiene la cadena JSON almacenada en el localStorage con la clave 'carrito'
+  const carritoJSON = localStorage.getItem("BMS__carrito__BMS");
+
+  // Se utiliza el if para ver si hay una cadena JSON válida en el localStorage y la convierte de nuevo a un arreglo y la asigna a la variable carrito
+  if (!!carritoJSON) {
+    carrito = JSON.parse(carritoJSON);
   }
 
-// Función para guardar el carrito en el localStorage
-function guardarCarrito() {
-    // Se convierte el arreglo carrito a una cadena JSON
-    const carritoJSON = JSON.stringify(carrito);
-    
-    // Se guarda la cadena JSON en el localStorage con la clave 'carrito'
-    localStorage.setItem('carrito', carritoJSON);
-  }
-  
-  // Función para cargar el carrito desde el localStorage
-  function cargarCarrito() {
-    // Se obtiene la cadena JSON almacenada en el localStorage con la clave 'carrito'
-    const carritoJSON = localStorage.getItem('carrito');
-  
-    // Se utiliza el if para ver si hay una cadena JSON válida en el localStorage y la convierte de nuevo a un arreglo y la asigna a la variable carrito
-    if (carritoJSON) {
-      carrito = JSON.parse(carritoJSON);
-    }
-  
-    // Función para actualizar el carrito
-    actualizarCarrito();
-  }
-  
+  // Función para actualizar el carrito
+  actualizarCarrito();
+}
+
+let comprarBTN = document.getElementById("comprarBTN");
+
+comprarBTN.addEventListener("click", () => {
+  let carritoDIV = document.getElementById("carrito");
+  carritoDIV.innerHTML +=
+    "<p>Gracias por comprar en Boutique María Sandía.</p>";
+});
